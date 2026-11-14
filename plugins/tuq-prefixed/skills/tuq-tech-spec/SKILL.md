@@ -14,8 +14,8 @@ disable-model-invocation: true
 
 **Run `tuq rules` and read all of it before you read or write `tuq/`.** It holds the folder's layout and the
 shape of the decisions you build on; this skill doesn't repeat them. Start the tech spec from `tuq template
-tech-spec`. `tuq` is a command the tuq plugin puts on the Bash tool's PATH, so this skill names no file paths.
-`tuq: command not found` means the plugin isn't enabled in this session: stop and say so.
+tech-spec`. `tuq` is a command tuq's installer puts on the PATH, so this skill names no file paths.
+`tuq: command not found` means tuq's commands aren't installed or the terminal predates them: stop and say so.
 
 `tuq-product-spec` has settled **what** to build with the user, as numbered decisions in `tuq/decisions/`. Your job
 is to work out **how** to build it, and write that down as the feature's **tech spec**, `tuq/tech-specs/<feature>.md`.

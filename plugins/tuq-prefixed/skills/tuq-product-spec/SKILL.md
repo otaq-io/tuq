@@ -13,9 +13,9 @@ argument-hint: "[feature or topic]"
 
 **Run `tuq rules` and read all of it before you read or write `tuq/`.** It holds the folder's layout,
 numbering, the decision file's shape, statuses, the conflict check and renumbering; this skill doesn't repeat them.
-`tuq` is a command the tuq plugin puts on the Bash tool's PATH (`rules`, `template`, `init`, `next`, `index`,
-`clashes`), so this skill names no file paths. `tuq: command not found` means the plugin isn't enabled in this
-session: stop and say so.
+`tuq` is a command tuq's installer puts on the PATH (`rules`, `template`, `init`, `next`, `index`, `clashes`), so
+this skill names no file paths. `tuq: command not found` means tuq's commands aren't installed or the terminal
+predates them: stop and say so.
 
 No code has been written for the feature yet. Your job is to settle **what to build, for whom and why** with the
 user, then write it down as the project's own **product decisions and docs**. After you, `tuq-tech-spec` works out
