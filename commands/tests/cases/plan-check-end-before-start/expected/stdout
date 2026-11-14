@@ -1,0 +1,4 @@
+tuq/plans/demo.md:1: <!-- tuq:plan:end --> comes before the start marker
+tuq/plans/demo.md:3: no "## Pieces" heading between the plan markers
+tuq/prompts/demo-orchestrator.md:19: note for piece 2, but the plan has pieces 1 to 0
+tuq/prompts/demo-orchestrator.md:23: note for piece 6, but the plan has pieces 1 to 0

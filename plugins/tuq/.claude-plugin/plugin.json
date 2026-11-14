@@ -1,5 +1,5 @@
 {
   "name": "tuq",
-  "description": "Product decisions, tech specs and milestone plans kept in tuq/ at the repository root. Puts the tuq and tuq-plan commands on PATH.",
+  "description": "Product decisions, tech specs and milestone plans kept in tuq/ at the repository root. The skills call the tuq and tuq-plan commands.",
   "author": { "name": "Nevzat Topcu" }
 }

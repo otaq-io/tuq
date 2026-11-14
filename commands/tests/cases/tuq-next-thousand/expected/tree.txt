@@ -1,0 +1,5 @@
+tuq/
+tuq/decisions/
+tuq/decisions/0998-c.md
+tuq/decisions/1000-b.md
+tuq/decisions/999-a.md

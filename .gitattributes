@@ -1,0 +1,3 @@
+# The commands embed rules.md and the templates byte for byte, and the golden tests compare bytes: no line-ending conversion.
+* text=auto eol=lf
+commands/tests/cases/** -text

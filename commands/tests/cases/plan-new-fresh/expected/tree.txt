@@ -1,0 +1,5 @@
+tuq/
+tuq/plans/
+tuq/plans/reading-list-sharing.md
+tuq/prompts/
+tuq/prompts/reading-list-sharing-orchestrator.md

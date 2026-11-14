@@ -1,0 +1,4 @@
+tuq/
+tuq/decisions/
+tuq/decisions/001-a.md
+tuq/decisions/002-b.md

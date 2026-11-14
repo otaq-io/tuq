@@ -1,0 +1,1 @@
+The script meant to name the en dash (its awk regex has \342\200\223 in it), but macOS awk (20200816) never matched it, so the bash script fell through to the general "title line must read" message. tuq-plan names the en dash, as the script intended (gawk gives the same).

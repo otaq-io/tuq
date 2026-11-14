@@ -1,0 +1,9 @@
+tuq/
+tuq/README.md
+tuq/decisions/
+tuq/decisions/001-sharing.md
+tuq/decisions/002-pipes.md
+tuq/decisions/010-turkish.md
+tuq/decisions/011-no-newline.md
+tuq/decisions/1000-big.md
+tuq/decisions/notes.md

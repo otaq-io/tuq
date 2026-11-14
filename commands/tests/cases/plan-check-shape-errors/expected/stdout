@@ -1,0 +1,29 @@
+tuq/plans/demo.md:8: indented text with no piece title above it
+tuq/plans/demo.md:9: use an em dash (—) before "waits for", not a hyphen or en dash
+tuq/plans/demo.md:11: use an em dash (—) before "waits for", not a hyphen or en dash
+tuq/plans/demo.md:13: piece numbered 4, expected 3 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:13: piece 4 has no "Check:" line in its details
+tuq/plans/demo.md:15: piece numbered 5, expected 4 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:15: "waits for" must be "nothing" or piece numbers like "1, 2", got "1 and 2"
+tuq/plans/demo.md:17: piece numbered 6, expected 5 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:17: piece 6 waits for 7: a piece waits only for pieces before it
+tuq/plans/demo.md:17: piece 6 waits for 0: a piece waits only for pieces before it
+tuq/plans/demo.md:17: piece 6 waits for 06: a piece waits only for pieces before it
+tuq/plans/demo.md:19: piece numbered 7, expected 6 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:19: title line must read "7. Title — waits for ..."
+tuq/plans/demo.md:21: piece numbered 8, expected 7 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:21: title line must read "8. Title — waits for nothing" or "— waits for 1, 2"
+tuq/plans/demo.md:23: piece numbered 9, expected 8 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:23: piece 9 has no indented details under its title
+tuq/plans/demo.md:24: piece numbered 10, expected 9 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:24: title line must read "10. Title — waits for ..."
+tuq/plans/demo.md:26: piece numbered 11, expected 10 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:26: title line must read "11. Title — waits for nothing" or "— waits for 1, 2"
+tuq/plans/demo.md:28: piece numbered 12, expected 11 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:28: "waits for" must be "nothing" or piece numbers like "1, 2", got "nothing "
+tuq/plans/demo.md:30: piece numbered 13, expected 12 (pieces are numbered 1, 2, 3 in order)
+tuq/plans/demo.md:30: "waits for" must be "nothing" or piece numbers like "1, 2", got "12,1"
+tuq/plans/demo.md:32: neither a piece title ("N. Title — waits for ...") nor details indented under one
+tuq/plans/demo.md:33: a heading after "## Pieces": the Pieces list must come last in the ticket Plan
+tuq/plans/demo.md:3: the why (before "## Pieces") must name the orchestrator prompt tuq/prompts/demo-orchestrator.md
+tuq/prompts/demo-orchestrator.md:5: note for piece 14, but the plan has pieces 1 to 13

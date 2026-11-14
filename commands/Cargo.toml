@@ -1,0 +1,27 @@
+[package]
+name = "tuq-commands"
+version = "0.0.0"
+edition = "2021"
+description = "The tuq and tuq-plan commands the tuq skills call"
+publish = false
+
+# No dependencies: the commands are cross-built for macOS, Windows and Linux and need nothing installed beside them.
+[dependencies]
+
+[lib]
+name = "tuq_commands"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tuq"
+path = "src/bin/tuq.rs"
+
+[[bin]]
+name = "tuq-plan"
+path = "src/bin/tuq-plan.rs"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
