@@ -419,7 +419,7 @@ function Install-Tuq([string[]]$Arguments) {
         if ($script:Tool -in 'claude', 'codex') {
             Say 'Its skills are tuq:<name>: /tuq:product-spec in Claude Code, $tuq:product-spec in Codex.'
         } else {
-            Say 'Its skills are tuq-<name> there: /tuq-product-spec.'
+            Say 'Its skills are tuq-<name> there: /tuq:tuq-product-spec in Copilot, tuq-product-spec in OpenCode.'
         }
         Say 'Open a new terminal to use tuq and tuq-plan. Run this again to update tuq.'
     } finally {

@@ -15,8 +15,9 @@ It works in Claude Code, Codex, GitHub Copilot and OpenCode, on any stack. The s
 numbered by hand. They are Rust programs with the rules and templates built in, and need nothing else installed.
 
 Skill names depend on the tool: `/tuq:product-spec` in Claude Code and `$tuq:product-spec` in Codex, where the plugin
-name is the namespace; `/tuq-product-spec` in Copilot and OpenCode, where each skill carries the prefix in its own name,
-so a repository's own `product-spec` can never hide tuq's.
+name is the namespace; in Copilot and OpenCode each skill carries the prefix in its own name, so a repository's own
+`product-spec` can never hide tuq's: `/tuq:tuq-product-spec` in Copilot (plugin, then skill; `/tuq-product-spec` is
+an unknown command there), and `tuq-product-spec` in OpenCode, which you ask for by name.
 
 ## Install
 
@@ -93,7 +94,7 @@ The commands: `cargo build --release` and `cargo test` in `commands/` (the tests
 repository; see `commands/tests/golden.rs`).
 
 `plugins/tuq-prefixed/` is the same plugin for GitHub Copilot and OpenCode, with each skill named `tuq-<name>`
-(`/tuq-product-spec`). It is generated from `plugins/tuq/`: after editing a skill, run `scripts/release --generate` and
+(`/tuq:tuq-product-spec` in Copilot, `tuq-product-spec` in OpenCode). It is generated from `plugins/tuq/`: after editing a skill, run `scripts/release --generate` and
 commit both; `scripts/release --check` (run by CI) fails when they differ.
 
 The installers take two options for trying a release before it is published: `--from <folder>` installs the commands

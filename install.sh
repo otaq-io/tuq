@@ -351,7 +351,7 @@ main() {
     fi
     case "$tool" in
     claude | codex) say "Its skills are tuq:<name>: /tuq:product-spec in Claude Code, \$tuq:product-spec in Codex." ;;
-    copilot | opencode) say "Its skills are tuq-<name> there: /tuq-product-spec." ;;
+    copilot | opencode) say "Its skills are tuq-<name> there: /tuq:tuq-product-spec in Copilot, tuq-product-spec in OpenCode." ;;
     esac
     case ":$PATH:" in
     *":$bin_dir:"*) ;;
