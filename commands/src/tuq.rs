@@ -7,6 +7,7 @@
 //! next     print the next free decision number (001, 002, ... 999, 1000)
 //! index    rebuild the decision index in tuq/README.md from the decision files
 //! clashes  print numbers used by more than one decision file; exit 1 if any
+//! --version  print the tuq release the program was built for (`dev` for a plain build)
 //! ```
 //!
 //! Run from anywhere inside the repository.
@@ -32,6 +33,10 @@ pub fn run(args: Vec<OsString>) -> i32 {
         "next" => next(),
         "index" => index(),
         "clashes" => clashes(),
+        "--version" => {
+            out(format!("tuq {}\n", crate::VERSION).as_bytes());
+            Ok(0)
+        }
         _ => {
             err("usage: tuq rules|template <name>|init|next|index|clashes");
             Ok(2)

@@ -5,6 +5,7 @@
 //!                  missing (existing files are left untouched); print both paths
 //! check <feature>  validate the Pieces shape, the links and the run order; exit 1 naming file and line
 //! order <feature>  rewrite the run order block in the prompt from the plan's Pieces
+//! --version        print the tuq release the program was built for (`dev` for a plain build)
 //! ```
 //!
 //! Run from anywhere inside the repository. The plan file stands alone: nothing here reads or writes an Otaq ticket
@@ -45,6 +46,10 @@ pub fn run(args: Vec<OsString>) -> i32 {
         "new" => new(&feature),
         "check" => check(&feature),
         "order" => order(&feature),
+        "--version" => {
+            out(format!("tuq-plan {}\n", crate::VERSION).as_bytes());
+            Ok(())
+        }
         _ => {
             err("usage: tuq-plan new|check|order <feature>");
             Err(Exit::Code(2))

@@ -1,0 +1,5 @@
+{
+  "name": "tuq",
+  "description": "Product decisions, tech specs and milestone plans kept in tuq/ at the repository root. The skills call the tuq and tuq-plan commands. This copy names each skill tuq-<name>, for GitHub Copilot and OpenCode; scripts/release generates it from plugins/tuq: edit that one.",
+  "author": { "name": "Nevzat Topcu" }
+}
