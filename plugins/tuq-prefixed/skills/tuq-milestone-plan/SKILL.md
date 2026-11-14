@@ -12,9 +12,9 @@ disable-model-invocation: true
 # Turn the specs into a plan: tuq-milestone-plan
 
 **Run `tuq rules` and read all of it before you read or write `tuq/`.** It holds the folder's layout and rules;
-this skill doesn't repeat them. `tuq` and `tuq-plan` are commands the tuq plugin puts on the Bash tool's PATH
+this skill doesn't repeat them. `tuq` and `tuq-plan` are commands tuq's installer puts on the PATH
 (`tuq-plan new`, `check`, `order`; each takes the `<feature>` name, see "Writing the plan"), so this skill names no
-file paths. `command not found` means the plugin isn't enabled in this session: stop and say so.
+file paths. `command not found` means tuq's commands aren't installed or the terminal predates them: stop and say so.
 
 `tuq-product-spec` settled what to build and `tuq-tech-spec` how. Your job is to turn them into work: the feature's
 **plan**, which says why the work is split the way it is and lists its **pieces**, their order and what each waits

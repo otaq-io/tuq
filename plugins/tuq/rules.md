@@ -4,7 +4,8 @@ Every tuq skill (`tuq:product-spec`, `tuq:step-back`, `tuq:tech-spec`, `tuq:mile
 rules` prints them) before it reads or writes `tuq/`. It is the one place these rules are written; the skills don't
 repeat them.
 
-The helper for everything mechanical is the `tuq` command, which the tuq plugin puts on the Bash tool's PATH:
+The helper for everything mechanical is the `tuq` command, which tuq's installer puts in `~/.tuq/bin`
+(`%LOCALAPPDATA%\tuq\bin` on Windows) and on the PATH:
 
 ```sh
 tuq rules                 # prints these rules
@@ -15,8 +16,8 @@ tuq index                 # rebuilds the index table in tuq/README.md from the d
 tuq clashes               # prints numbers used by more than one file; exit 1 if any
 ```
 
-`tuq: command not found` means the tuq plugin isn't enabled in this session: stop and say so; never rebuild
-its files by hand.
+`tuq: command not found` means tuq's commands aren't installed, or the terminal was opened before they were: stop
+and say so (tuq's installer installs them; then open a new terminal); never rebuild its files by hand.
 
 ## Layout
 
