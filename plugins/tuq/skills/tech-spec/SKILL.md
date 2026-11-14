@@ -39,7 +39,8 @@ understands what was decided, what else was considered and why.
    - **The feature name** is the skill's argument in kebab case, or 2–5 words from the topic
      (`reading-list-sharing`); reuse an existing `tuq/tech-specs/<feature>.md` or `tuq/plans/<feature>.md` of the
      same feature, so the feature's tech spec, plan and prompt match by name, and update that file.
-   - **No `tuq/` yet:** run `tuq init` and add the pointers `tuq rules` describes.
+   - **No `tuq/` yet:** run `tuq init` and add the pointers `tuq rules` describes (to each of `README.md`,
+     `CLAUDE.md` and `AGENTS.md` that exists).
 4. **Work out how to build it: draft first, then discuss.** Read the code the work touches and decide: where the new
    code goes, the parts it adds or changes and how they depend on each other, the data it stores and how, the APIs
    and their shapes, what it reuses, how it is tested, and what could go wrong (migrations, load, security). Shape

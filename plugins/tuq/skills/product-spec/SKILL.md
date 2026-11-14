@@ -54,7 +54,8 @@ understands what was decided and why.
      is your next question (step 4), and you wait for the answer.
    - Then `tuq next`, write `tuq/decisions/NNN-<slug>.md` from `tuq template decision` (no `Ticket:` line when
      there is no ticket), mark a superseded decision's Status line only, and run `tuq index`. In a repo with no
-     `tuq/` yet, run `tuq init` first and add the pointers `tuq rules` describes.
+     `tuq/` yet, run `tuq init` first and add the pointers `tuq rules` describes (to each of `README.md`,
+     `CLAUDE.md` and `AGENTS.md` that exists).
    - A point you saved earlier in this session and haven't committed is edited in place when the user changes it;
      anything committed changes only through a new, superseding decision.
    - Update the overview docs the project's notes name to match. You may edit any file the spec needs (an overview,
