@@ -1,0 +1,12 @@
+{
+  "name": "otaq-claude-skills",
+  "owner": { "name": "Nevzat Topcu" },
+  "metadata": { "description": "GitHub Copilot reads this file, not .claude-plugin/marketplace.json: its tuq is the prefixed plugin, with each skill named tuq-<name>." },
+  "plugins": [
+    {
+      "name": "tuq",
+      "source": "./plugins/tuq-prefixed",
+      "description": "Product decisions, tech specs and milestone plans in tuq/: tuq-product-spec, tuq-step-back, tuq-tech-spec, tuq-milestone-plan. Stack-agnostic."
+    }
+  ]
+}
