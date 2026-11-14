@@ -7,6 +7,8 @@ description: >-
   /tuq:milestone-plan.
 argument-hint: "[feature]"
 disable-model-invocation: true
+metadata:
+  tuq-release: 2026.11.14
 ---
 
 # Turn the specs into a plan: tuq:milestone-plan

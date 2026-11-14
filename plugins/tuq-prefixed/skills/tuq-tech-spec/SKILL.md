@@ -8,6 +8,8 @@ description: >-
   only, never the product.
 argument-hint: "[feature]"
 disable-model-invocation: true
+metadata:
+  tuq-release: 2026.11.14
 ---
 
 # Work out how to build it: tuq-tech-spec

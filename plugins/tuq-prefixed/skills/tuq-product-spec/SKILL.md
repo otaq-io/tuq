@@ -7,6 +7,8 @@ description: >-
   Use when the user starts describing or exploring a feature ("I want users to...", "what if we added...", "let's
   spec this"). Not for bug fixes, questions about existing code, refactors, reviews or other technical work.
 argument-hint: "[feature or topic]"
+metadata:
+  tuq-release: 2026.11.14
 ---
 
 # Settle what to build: tuq-product-spec

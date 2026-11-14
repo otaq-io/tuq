@@ -6,6 +6,8 @@ description: >-
   When the user says the feature is getting more complicated than it should be, or is unsure about the set of
   decisions, offer it and wait for a yes; run it when the user agrees or types /tuq:step-back.
 argument-hint: "[feature]"
+metadata:
+  tuq-release: 2026.11.14
 ---
 
 # Step back: the feature without its decisions
