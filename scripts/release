@@ -255,7 +255,7 @@ pack() {
         read -r platform _ <<<"$line"
         case "$platform" in
         windows-*) (cd "$dist/$platform" && zip -q -X "$dist/tuq-$platform.zip" tuq.exe tuq-plan.exe) ;;
-        *) (cd "$dist/$platform" && COPYFILE_DISABLE=1 tar --uid 0 --gid 0 --uname root --gname root -czf "$dist/tuq-$platform.tar.gz" tuq tuq-plan) ;;
+        *) (cd "$dist/$platform" && COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata --uid 0 --gid 0 --uname root --gname root -czf "$dist/tuq-$platform.tar.gz" tuq tuq-plan) ;;
         esac
     done
     (cd "$dist" && shasum -a 256 tuq-*.tar.gz tuq-*.zip >SHA256SUMS)
