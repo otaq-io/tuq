@@ -164,7 +164,6 @@ put_on_path() {
 # --- 3. the tool ----------------------------------------------------------------------------------------------------
 
 install_claude() {
-    need claude "https://claude.com/claude-code"
     if claude plugin marketplace list --json </dev/null 2>/dev/null | grep -q "\"name\": *\"$MARKETPLACE\""; then
         run claude plugin marketplace update "$MARKETPLACE"
     else
@@ -178,7 +177,6 @@ install_claude() {
 }
 
 install_codex() {
-    need codex "https://developers.openai.com/codex/cli"
     if codex plugin marketplace list </dev/null 2>/dev/null | grep -q "^$MARKETPLACE "; then
         # Only a git marketplace has anything to refresh; a folder is read as it is.
         say "  \$ codex plugin marketplace upgrade $MARKETPLACE"
@@ -199,13 +197,13 @@ install_codex() {
 }
 
 install_copilot() {
-    need copilot "https://github.com/features/copilot/cli"
     if copilot plugin marketplace list </dev/null 2>/dev/null | grep -q "$MARKETPLACE"; then
         run copilot plugin marketplace update "$MARKETPLACE"
     else
         run copilot plugin marketplace add "$source"
     fi
-    if copilot plugin list </dev/null 2>/dev/null | grep -q "$PLUGIN"; then
+    # A marketplace's plugins are listed "(disabled)" until installed; installing also turns a disabled tuq back on.
+    if copilot plugin list </dev/null 2>/dev/null | grep "$PLUGIN" | grep -qv 'disabled'; then
         run copilot plugin update "$PLUGIN"
     else
         run copilot plugin install "$PLUGIN"
@@ -310,10 +308,11 @@ main() {
         *) usage >&2; fail "unknown argument: $1" ;;
         esac
     done
+    # The tool is checked first, so nothing is installed when it is missing.
     case "$tool" in
-    claude) tool_name="Claude Code" ;;
-    codex) tool_name="Codex" ;;
-    copilot) tool_name="GitHub Copilot" ;;
+    claude) tool_name="Claude Code"; need claude "https://claude.com/claude-code" ;;
+    codex) tool_name="Codex"; need codex "https://developers.openai.com/codex/cli" ;;
+    copilot) tool_name="GitHub Copilot"; need copilot "https://github.com/features/copilot/cli" ;;
     opencode) tool_name="OpenCode" ;;
     "") usage >&2; fail "say which tool: --tool claude|codex|copilot|opencode" ;;
     *) fail "unknown tool '$tool': use claude, codex, copilot or opencode" ;;

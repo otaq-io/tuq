@@ -43,9 +43,11 @@ function Usage {
     'usage: install.ps1 --tool claude|codex|copilot|opencode [--from <folder>] [--source <folder|owner/repo|git URL>]'
 }
 
-# The tool's program: an .exe or .cmd, never an npm .ps1 shim (the execution policy often blocks those).
+# The tool's program: an .exe or .cmd, never npm's .ps1 shim (the execution policy often blocks those) or its
+# extensionless sh shim.
 function Find-Tool([string]$Name) {
-    $found = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    $found = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue |
+        Where-Object { $_.Extension -in '.exe', '.cmd', '.bat', '.com' } | Select-Object -First 1
     if ($found) { return $found.Source }
     return $null
 }
@@ -239,8 +241,9 @@ function Install-Copilot {
     } else {
         Run $copilot @('plugin', 'marketplace', 'add', $script:Source) 'copilot'
     }
-    $plugins = (Invoke-Quiet $copilot @('plugin', 'list')).Output
-    if ($plugins -match [regex]::Escape($Plugin)) {
+    # A marketplace's plugins are listed "(disabled)" until installed; installing also turns a disabled tuq back on.
+    $listed = ((Invoke-Quiet $copilot @('plugin', 'list')).Output -split "`r?`n") | Where-Object { $_.Contains($Plugin) }
+    if ($listed -and -not ($listed -match 'disabled')) {
         Run $copilot @('plugin', 'update', $Plugin) 'copilot'
     } else {
         Run $copilot @('plugin', 'install', $Plugin) 'copilot'
@@ -371,6 +374,12 @@ function Install-Tuq([string[]]$Arguments) {
     $toolName = @{ claude = 'Claude Code'; codex = 'Codex'; copilot = 'GitHub Copilot'; opencode = 'OpenCode' }[$script:Tool]
     if (-not $script:Tool) { Fail "say which tool: --tool claude|codex|copilot|opencode`n$(Usage)" }
     if (-not $toolName) { Fail "unknown tool '$($script:Tool)': use claude, codex, copilot or opencode" }
+    # The tool is checked first, so nothing is installed when it is missing.
+    switch ($script:Tool) {
+        'claude' { $null = Need-Tool 'claude' 'https://claude.com/claude-code' }
+        'codex' { $null = Need-Tool 'codex' 'https://developers.openai.com/codex/cli' }
+        'copilot' { $null = Need-Tool 'copilot' 'https://github.com/features/copilot/cli' }
+    }
     if ($script:From) {
         if (-not (Test-Path -LiteralPath $script:From -PathType Container)) { Fail "--from $($script:From) isn't a folder" }
         $script:From = (Resolve-Path -LiteralPath $script:From).ProviderPath
