@@ -1,6 +1,6 @@
 # Orchestrator · <feature>
 
-- **Ticket:** <KEY, or "none" in a plain chat>
+- **Ticket:** <KEY, or "none">
 - **Date:** YYYY-MM-DD
 - **Plan:** tuq/plans/<feature>.md
 - **Tech spec:** tuq/tech-specs/<feature>.md
@@ -20,17 +20,6 @@ Start a piece as soon as every piece it waits for is merged:
 <!-- tuq:order:end -->
 
 ## Running a piece
-
-### In an Otaq build stage ($OTAQ_TICKET set, prime shows this Plan)
-
-- Start a piece with `otaq helper start N --title "<the Plan's title>"`; when it has a note below, pass the note on
-  stdin (`--stdin`).
-- Check what it hands back with `otaq helper diff N` and the project's tests in its worktree (`otaq helper list`
-  names it).
-- Merge with `otaq helper merge N`, one piece at a time, then start the pieces that waited for it.
-- Follow the build stage's own rules for questions, hand-backs and re-plans; this prompt never replaces them.
-
-### Anywhere else
 
 - Start one Agent call per piece with isolation "worktree". Its prompt: the piece's details from the plan, its note
   below, and "commit on your branch; don't merge".

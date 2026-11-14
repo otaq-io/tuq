@@ -1,6 +1,6 @@
 # Plan · <feature>
 
-- **Ticket:** <KEY, or "none" in a plain chat>
+- **Ticket:** <KEY, or "none">
 - **Date:** YYYY-MM-DD
 - **Decisions:** NNN, NNN
 - **Tech spec:** tuq/tech-specs/<feature>.md

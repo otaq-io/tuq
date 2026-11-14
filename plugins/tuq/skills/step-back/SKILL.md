@@ -37,14 +37,13 @@ plugin).
 5. **Compare.** Say, in plain words, where the decisions have taken the feature against the clean slate, then name the
    **1-3 decisions that add the most complication**, each with its cost in one line ("Decision 004 needs a renumber
    step on every clash"). Say so plainly when the decisions hold up and the complication is in the problem itself.
-6. **Hand back.** Name the decisions worth revisiting and offer to continue in `tuq:product-spec`:
-   - **Plain chat** (no `$OTAQ_TICKET`): one AskUserQuestion with an option per decision worth revisiting
-     (`Revisit 004`, `Revisit 006`, each with its cost as the description) and `Keep them all`.
-   - **Otaq stage** (`$OTAQ_TICKET` set): the same options with `otaq ask human --stdin` (`--option` / `--note` per
-     option, the question text on stdin), then end your turn, so the ticket shows "Asks you".
+6. **Hand back.** Name the decisions worth revisiting and offer to continue in `tuq:product-spec`: one
+   AskUserQuestion with an option per decision worth revisiting (`Revisit 004`, `Revisit 006`, each with its cost as
+   the description) and `Keep them all`.
 
-   A "Revisit" answer continues as `tuq:product-spec`'s next open point, so any change is a new decision through its
-   conflict check and the old one is marked superseded. `Keep them all` continues `tuq:product-spec` where it was.
+   A "Revisit" answer continues as `tuq:product-spec`'s next open point (call the Skill tool with `tuq:product-spec`
+   when it isn't already running), so any change is a new decision through its conflict check and the old one is
+   marked superseded. `Keep them all` continues `tuq:product-spec` where it was.
 
 ## Rules
 

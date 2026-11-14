@@ -34,7 +34,7 @@ its files by hand.
 - `tuq/prompts/<feature>-orchestrator.md` holds the orchestrator prompt for that plan: how the agent in charge
   runs the pieces.
 - **First write in a repo with no `tuq/`:** run `tuq init`, then add a short pointer to `tuq/README.md`
-  in the root `README.md` and `CLAUDE.md`, **only to those that exist** (create neither), for example:
+  in the root `README.md`, `CLAUDE.md` and `AGENTS.md`, **only to those that exist** (create none), for example:
 
   ```markdown
   ## Product decisions (tuq)
@@ -64,8 +64,7 @@ its files by hand.
 ## Plans and orchestrator prompts
 
 - The **plan file owns the pieces**. The text between its markers `<!-- tuq:plan:start -->` and
-  `<!-- tuq:plan:end -->` is the ticket's Plan word for word, ending in `## Pieces`: change the pieces there, never
-  only in the ticket.
+  `<!-- tuq:plan:end -->` is the plan, ending in `## Pieces`: change the pieces there.
 - The orchestrator prompt's **run order is generated** from the plan's waits, between `<!-- tuq:order:start -->`
   and `<!-- tuq:order:end -->`: never edit it by hand.
 - The shape of both files is checked by `tuq-plan check <feature>`.
@@ -107,7 +106,7 @@ The reason, including the alternatives the user turned down when that matters.
 ```
 
 - **Title line** `# NNN · <short title>` (the `·` is required: `index` reads it).
-- **Header:** `Date` (today, `YYYY-MM-DD`); `Ticket` (the Otaq ticket key, left out when there is none); `Status`;
+- **Header:** `Date` (today, `YYYY-MM-DD`); `Ticket` (the ticket key, left out when there is none); `Status`;
   `Supersedes` and `Related` only when they apply (leave the lines out otherwise).
 - **Summary:** one paragraph, one or two sentences. **Decision:** bullets. **Why:** a short paragraph.
 - No implementation in a product decision: what the user sees and can do, for whom, the data, the edge cases, what is
@@ -169,4 +168,4 @@ number it reports:
    prompts (`grep -rn "NNN" tuq/` finds them). Only references that mean the moved file change; the kept file
    keeps its number.
 4. Run `tuq index` and `tuq clashes` (it must print nothing).
-5. Show the user the renames (old → new) before committing in an Otaq stage; in a plain chat leave them uncommitted.
+5. Show the user the renames (old → new) and leave them uncommitted.
