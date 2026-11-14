@@ -1,0 +1,12 @@
+tuq/
+tuq/decisions/
+tuq/decisions/001-a.md
+tuq/decisions/0012-y.md
+tuq/decisions/003-alpha.md
+tuq/decisions/003-mid.md
+tuq/decisions/003-zeta.md
+tuq/decisions/012-x.md
+tuq/decisions/040-p.md
+tuq/decisions/040-q.md
+tuq/decisions/100-only.md
+tuq/decisions/12-short.md

@@ -6,8 +6,8 @@ A Claude Code plugin marketplace with one plugin.
 | ------------------ | ------------------------------------------------------------------ | ------------------------------------------- |
 | `tuq`           | `tuq:product-spec`, `tuq:step-back`, `tuq:tech-spec`, `tuq:milestone-plan` | any repo, any stack (user or project scope) |
 
-The plugin puts its helper commands on the Bash tool's PATH while it is enabled (`tuq`, `tuq-plan`), so no skill
-names a file path.
+The skills call two commands, `tuq` and `tuq-plan`, so no skill names a file path. They are Rust programs built from
+`commands/`, with `plugins/tuq/rules.md` and `plugins/tuq/templates/` built in, and need nothing else installed.
 
 ## Install
 
@@ -41,4 +41,5 @@ Add the marketplace from your local checkout (`claude plugin marketplace add <pa
 edit takes effect at the next session or after `/reload-plugins`. The plugins carry no `version`, so every commit is a
 new version for git installs.
 
-`tuq-plan pull` needs `python3` and `otaq`.
+The commands: `cargo build --release` and `cargo test` in `commands/` (the tests run each command on a scratch
+repository; see `commands/tests/golden.rs`).

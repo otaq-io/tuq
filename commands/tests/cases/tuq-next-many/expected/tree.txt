@@ -1,0 +1,14 @@
+tuq/
+tuq/decisions/
+tuq/decisions/001-first.md
+tuq/decisions/002-second.md
+tuq/decisions/0042-padded.md
+tuq/decisions/005.md
+tuq/decisions/006-y.txt
+tuq/decisions/01-short.md
+tuq/decisions/010-tenth.md
+tuq/decisions/123x-y.md
+tuq/decisions/500-z.md.bak
+tuq/decisions/abc-001.md
+tuq/decisions/sub/
+tuq/decisions/sub/900-nested.md

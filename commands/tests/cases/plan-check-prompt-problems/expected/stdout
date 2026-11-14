@@ -1,0 +1,5 @@
+tuq/prompts/demo-orchestrator.md: doesn't link to the plan tuq/plans/demo.md
+tuq/prompts/demo-orchestrator.md: missing run order markers (<!-- tuq:order:start --> ... <!-- tuq:order:end -->)
+tuq/prompts/demo-orchestrator.md:8: note for piece 0, but the plan has pieces 1 to 6
+tuq/prompts/demo-orchestrator.md:10: note for piece 7, but the plan has pieces 1 to 6
+tuq/prompts/demo-orchestrator.md:16: note for piece 9, but the plan has pieces 1 to 6
