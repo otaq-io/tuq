@@ -226,7 +226,8 @@ sign_and_verify() {
     for program in "${programs[@]}"; do
         file="$dist/macos-universal/$program"
         step "Signing $program for macOS ad-hoc"
-        codesign --force --sign - "$file"
+        # Under the program's own name (the linker's ad-hoc signature names it tuq-<uuid>).
+        codesign --force --sign - --identifier "$program" "$file"
         codesign --verify --strict "$file"
         [[ "$(lipo -archs "$file")" == "x86_64 arm64" ]] || fail "$file isn't universal: $(lipo -archs "$file")"
         [[ "$("$file" --version)" == "$program $version" ]] || fail "$file --version says '$("$file" --version)'"
@@ -254,7 +255,7 @@ pack() {
         read -r platform _ <<<"$line"
         case "$platform" in
         windows-*) (cd "$dist/$platform" && zip -q -X "$dist/tuq-$platform.zip" tuq.exe tuq-plan.exe) ;;
-        *) (cd "$dist/$platform" && COPYFILE_DISABLE=1 tar -czf "$dist/tuq-$platform.tar.gz" tuq tuq-plan) ;;
+        *) (cd "$dist/$platform" && COPYFILE_DISABLE=1 tar --uid 0 --gid 0 --uname root --gname root -czf "$dist/tuq-$platform.tar.gz" tuq tuq-plan) ;;
         esac
     done
     (cd "$dist" && shasum -a 256 tuq-*.tar.gz tuq-*.zip >SHA256SUMS)
