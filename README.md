@@ -43,3 +43,15 @@ new version for git installs.
 
 The commands: `cargo build --release` and `cargo test` in `commands/` (the tests run each command on a scratch
 repository; see `commands/tests/golden.rs`).
+
+`plugins/tuq-prefixed/` is the same plugin for GitHub Copilot and OpenCode, with each skill named `tuq-<name>`
+(`/tuq-product-spec`). It is generated from `plugins/tuq/`: after editing a skill, run `scripts/release --generate` and
+commit both; `scripts/release --check` (run by CI) fails when they differ.
+
+## Releasing
+
+`scripts/release` (on the maintainer's Mac) dates the release (`2026.11.14`, `.2` for a second that day), stamps
+`metadata.tuq-release` into every `SKILL.md`, regenerates `plugins/tuq-prefixed/`, builds and signs `tuq` and
+`tuq-plan` for macOS, Linux and Windows into `dist/`, commits, tags `v<version>`, pushes and creates the GitHub
+release with the programs as assets. `scripts/release --dry-run` does all of it but the push and the release. The
+script's header lists the steps, the asset names and what it needs installed.

@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+# scripts/release [--dry-run]: publishes a tuq release. Bash, for the maintainer's Mac only: it cross-builds every
+# platform's commands from there. Two parts of it also run on Linux (CI), and need only bash, perl and diff:
+#   scripts/release --check     fails when the committed plugins/tuq-prefixed isn't what generation gives
+#   scripts/release --generate  regenerates plugins/tuq-prefixed from plugins/tuq (run it after editing a skill)
+#
+# A release, step by step:
+#  1. Checks the checkout: no local changes; on main and level with origin/main (a dry run only warns about those).
+#  2. Takes the version from today's date: 2026.11.14, then 2026.11.14.2 for a second release that day (tuq decision
+#     095's rule), counting the tags `v<version>` here and on origin. Nobody types it.
+#  3. Writes `metadata.tuq-release: <version>` into the front matter of every plugins/tuq/skills/*/SKILL.md (tech spec
+#     skills-in-their-own-repos §5): what Otaq and the installer read as the installed tuq's version.
+#  4. Generates plugins/tuq-prefixed/ from plugins/tuq/ for GitHub Copilot and OpenCode (tuq decision 105): each skill
+#     in a `tuq-<name>` folder with `name: tuq-<name>`, and every reference to another tuq skill (`tuq:step-back`,
+#     `/tuq:product-spec`) rewritten to `tuq-step-back`, `/tuq-product-spec`. Its manifest keeps the plugin name `tuq`.
+#     Only the skills are copied: they name no file of the plugin (rules and templates come from the `tuq` command).
+#  5. Runs the commands' tests (commands/), then builds `tuq` and `tuq-plan` with TUQ_RELEASE=<version> (their
+#     `--version`) for each platform below, into dist/ (ignored by git, emptied first).
+#  6. Signs them as Otaq's app is signed (tuq decision 107): ad-hoc on macOS (`codesign --sign -`), nothing on Windows
+#     or Linux. Checks each file's type and runs the Mac's pair.
+#  7. Packs each platform's pair into one archive and writes SHA256SUMS.
+#  8. Commits the stamped skills and the prefixed plugin ("Release tuq <version>") and tags it `v<version>`.
+#  9. Pushes main and the tag to origin, and creates the GitHub release `v<version>` with the archives and SHA256SUMS
+#     as its assets (tech spec §6). --dry-run stops before this step: it commits and tags locally, pushes nothing,
+#     creates no release, and says how to drop its commit and tag.
+#
+# The release assets (the installer, install.sh / install.ps1, downloads them; the names carry no version so
+# https://github.com/<owner>/<repo>/releases/latest/download/<name> always gives the newest release's):
+#   tuq-macos-universal.tar.gz   tuq, tuq-plan           Apple silicon and Intel in one file, signed ad-hoc
+#   tuq-linux-x64.tar.gz         tuq, tuq-plan           static (musl), no library needed
+#   tuq-linux-arm64.tar.gz       tuq, tuq-plan           static (musl)
+#   tuq-windows-x64.zip          tuq.exe, tuq-plan.exe   unsigned; needs only Windows' own C runtime (UCRT)
+#   tuq-windows-arm64.zip        tuq.exe, tuq-plan.exe   unsigned; same
+#   SHA256SUMS                   `shasum -a 256` lines for the five archives
+# Each archive holds the two programs at its top level. The unpacked programs stay in dist/<platform>/.
+# Windows gets x64 and arm64 builds, as Otaq's app does.
+#
+# Needs on the Mac: Xcode's command line tools (lipo, codesign), rustup with the targets below, zig and cargo-zigbuild
+# (`brew install zig`, `cargo install cargo-zigbuild --locked`) for the Linux and Windows builds, and gh, signed in, to
+# create the release.
+
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source_plugin="$root/plugins/tuq"
+prefixed_plugin="$root/plugins/tuq-prefixed"
+dist="$root/dist"
+
+# platform name in the asset, Rust target(s), build tool. macOS is two targets joined with lipo.
+platforms=(
+    "macos-universal aarch64-apple-darwin,x86_64-apple-darwin cargo"
+    "linux-x64 x86_64-unknown-linux-musl zigbuild"
+    "linux-arm64 aarch64-unknown-linux-musl zigbuild"
+    "windows-x64 x86_64-pc-windows-gnullvm zigbuild"
+    "windows-arm64 aarch64-pc-windows-gnullvm zigbuild"
+)
+programs=(tuq tuq-plan)
+
+fail() {
+    echo "release: $*" >&2
+    exit 1
+}
+
+step() {
+    echo "==> $*"
+}
+
+# The skill folder names of plugins/tuq, one per line.
+skill_names() {
+    local dir name
+    for dir in "$source_plugin"/skills/*/; do
+        name="$(basename "$dir")"
+        [[ "$name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || fail "skill folder name '$name' isn't kebab-case"
+        [[ -f "$dir/SKILL.md" ]] || fail "plugins/tuq/skills/$name has no SKILL.md"
+        echo "$name"
+    done
+}
+
+# generate <out dir>: writes the prefixed plugin made from plugins/tuq into <out dir>, which must not exist.
+generate() {
+    local out="$1" names name file
+    names="$(skill_names | paste -sd '|' -)"
+    [[ -n "$names" ]] || fail "plugins/tuq/skills has no skills"
+
+    mkdir -p "$out/.claude-plugin" "$out/skills"
+    # The manifest keeps the name `tuq`, so installing this over a plain-named tuq replaces it (decision 105).
+    perl -pe 's/("description":\s*"[^"]*?)"/$1 This copy names each skill tuq-<name>, for GitHub Copilot and OpenCode; scripts\/release generates it from plugins\/tuq: edit that one."/' \
+        "$source_plugin/.claude-plugin/plugin.json" >"$out/.claude-plugin/plugin.json"
+    grep -q 'generates it from plugins/tuq' "$out/.claude-plugin/plugin.json" ||
+        fail "plugins/tuq/.claude-plugin/plugin.json has no \"description\" to extend"
+
+    while IFS= read -r name; do
+        cp -R "$source_plugin/skills/$name" "$out/skills/tuq-$name"
+    done < <(skill_names)
+
+    while IFS= read -r -d '' file; do
+        # References to other tuq skills: tuq:<skill> (also inside /tuq:<skill>) becomes tuq-<skill>. Markers such as
+        # `tuq:plan:start` and the `tuq: command not found` message name no skill and stay.
+        TUQ_SKILLS="$names" perl -pi -e \
+            's/(?<![A-Za-z0-9_-])tuq:($ENV{TUQ_SKILLS})(?![A-Za-z0-9_-])/tuq-$1/g' "$file"
+    done < <(find "$out/skills" -type f -name '*.md' -print0)
+
+    for file in "$out"/skills/*/SKILL.md; do
+        # `name:` in the front matter (between the first two `---` lines).
+        perl -pi -e '
+            $fm = 1 if $. == 1 && /^---\s*$/;
+            if ($fm && $. > 1 && /^---\s*$/) { $fm = 0 }
+            if ($fm && /^name:\s*(\S+)\s*$/) { $_ = "name: tuq-$1\n"; $done = 1 }
+            close ARGV if eof;
+            END { exit($done ? 0 : 3) }
+        ' "$file" || fail "$(basename "$(dirname "$file")"): no name: in the front matter"
+    done
+}
+
+# check: generation into a scratch folder, compared with the committed plugins/tuq-prefixed.
+check() {
+    local tmp differs=false
+    tmp="$(mktemp -d)"
+    generate "$tmp/tuq-prefixed"
+    diff -r "$tmp/tuq-prefixed" "$prefixed_plugin" >"$tmp/diff" 2>&1 || differs=true
+    if $differs; then
+        sed "s|$tmp/tuq-prefixed|generated|g; s|$prefixed_plugin|plugins/tuq-prefixed|g" "$tmp/diff" >&2
+    fi
+    rm -rf "$tmp"
+    $differs && fail "plugins/tuq-prefixed is stale: it isn't what plugins/tuq generates. Run scripts/release --generate and commit it."
+    echo "plugins/tuq-prefixed is up to date with plugins/tuq."
+}
+
+# regenerate: replaces plugins/tuq-prefixed with a fresh generation.
+regenerate() {
+    local tmp
+    tmp="$(mktemp -d)"
+    generate "$tmp/tuq-prefixed"
+    rm -rf "$prefixed_plugin"
+    mv "$tmp/tuq-prefixed" "$prefixed_plugin"
+    rmdir "$tmp"
+}
+
+# stamp <version>: sets metadata.tuq-release in every SKILL.md's front matter, adding the metadata map if needed.
+stamp() {
+    local version="$1" file
+    for file in "$source_plugin"/skills/*/SKILL.md; do
+        TUQ_RELEASE="$version" perl -0pi -e '
+            # Never exit early: -i has the file open for writing, so the text is always printed back whole.
+            my $v = $ENV{TUQ_RELEASE};
+            s/\A(---\n)(.*?\n)(---\n)/fm($1, $2, $3)/se or $bad = 1;
+            END { exit($bad ? 3 : 0) }
+            sub fm {
+                my ($open, $body, $close) = @_;
+                if ($body =~ /^metadata:[ \t]*\S/m) { $bad = 1; return "$open$body$close" }
+                if ($body =~ /^metadata:[ \t]*\n((?:[ \t]+.*\n)*)/m) {
+                    my $map = $1;
+                    my $new = $map =~ /^[ \t]+tuq-release:/m
+                        ? $map =~ s/^([ \t]+tuq-release:).*$/$1 $v/mr
+                        : "  tuq-release: $v\n$map";
+                    $body =~ s/^metadata:[ \t]*\n\Q$map\E/metadata:\n$new/m;
+                } else {
+                    $body .= "metadata:\n  tuq-release: $v\n";
+                }
+                return "$open$body$close";
+            }
+        ' "$file" || fail "$file: no front matter, or a metadata: that isn't a block map"
+        grep -qx "  tuq-release: $version" "$file" || fail "$file: the stamp didn't land"
+    done
+}
+
+# The release's version: today's date, then .2, .3... when that day already has a release (here or on origin).
+next_version() {
+    local today tags n
+    today="$(date +%Y.%m.%d)"
+    tags="$(
+        git -C "$root" tag -l "v$today*"
+        if git -C "$root" remote get-url origin >/dev/null 2>&1; then
+            git -C "$root" ls-remote --tags --refs origin "v$today*" 2>/dev/null | sed 's|.*refs/tags/||' || true
+        fi
+    )"
+    if ! grep -qx "v$today" <<<"$tags"; then
+        echo "$today"
+        return
+    fi
+    n=2
+    while grep -qx "v$today.$n" <<<"$tags"; do
+        n=$((n + 1))
+    done
+    echo "$today.$n"
+}
+
+need() {
+    command -v "$1" >/dev/null 2>&1 || fail "$1 isn't installed ($2)"
+}
+
+build() {
+    local version="$1" line platform targets tool target program dir
+    local -a target_list
+    export CARGO_TARGET_DIR="$root/commands/target"
+    for line in "${platforms[@]}"; do
+        read -r platform targets tool <<<"$line"
+        IFS=, read -r -a target_list <<<"$targets"
+        for target in "${target_list[@]}"; do
+            step "Building $platform ($target)"
+            if [[ "$tool" == zigbuild ]]; then
+                (cd "$root/commands" && TUQ_RELEASE="$version" cargo zigbuild --quiet --release --locked --target "$target")
+            else
+                (cd "$root/commands" && TUQ_RELEASE="$version" cargo build --quiet --release --locked --target "$target")
+            fi
+        done
+        dir="$dist/$platform"
+        mkdir -p "$dir"
+        for program in "${programs[@]}"; do
+            case "$platform" in
+            macos-*)
+                lipo -create -output "$dir/$program" \
+                    "$CARGO_TARGET_DIR/aarch64-apple-darwin/release/$program" \
+                    "$CARGO_TARGET_DIR/x86_64-apple-darwin/release/$program"
+                ;;
+            windows-*) cp "$CARGO_TARGET_DIR/${target_list[0]}/release/$program.exe" "$dir/" ;;
+            *) cp "$CARGO_TARGET_DIR/${target_list[0]}/release/$program" "$dir/" ;;
+            esac
+        done
+    done
+}
+
+# sign_and_verify <version>: ad-hoc signs the macOS programs, then checks every program's type and runs the Mac's.
+sign_and_verify() {
+    local version="$1" program file expect
+    for program in "${programs[@]}"; do
+        file="$dist/macos-universal/$program"
+        step "Signing $program for macOS ad-hoc"
+        # Under the program's own name (the linker's ad-hoc signature names it tuq-<uuid>).
+        codesign --force --sign - --identifier "$program" "$file"
+        codesign --verify --strict "$file"
+        [[ "$(lipo -archs "$file")" == "x86_64 arm64" ]] || fail "$file isn't universal: $(lipo -archs "$file")"
+        [[ "$("$file" --version)" == "$program $version" ]] || fail "$file --version says '$("$file" --version)'"
+        if arch -x86_64 /usr/bin/true 2>/dev/null; then
+            [[ "$(arch -x86_64 "$file" --version)" == "$program $version" ]] || fail "$file (Intel) --version is wrong"
+        fi
+    done
+    for program in "${programs[@]}"; do
+        for expect in \
+            "linux-x64/$program:ELF 64-bit LSB.*x86-64.*static" \
+            "linux-arm64/$program:ELF 64-bit LSB.*ARM aarch64.*static" \
+            "windows-x64/$program.exe:PE32\+ executable \(console\) x86-64" \
+            "windows-arm64/$program.exe:PE32\+ executable \(console\) Aarch64"; do
+            file -b "$dist/${expect%%:*}" | grep -Eq "${expect#*:}" ||
+                fail "dist/${expect%%:*} is $(file -b "$dist/${expect%%:*}")"
+            # The release's version is built in (each program prints it with --version).
+            grep -aqF "$version" "$dist/${expect%%:*}" || fail "dist/${expect%%:*} doesn't carry $version"
+        done
+    done
+}
+
+pack() {
+    local line platform
+    for line in "${platforms[@]}"; do
+        read -r platform _ <<<"$line"
+        case "$platform" in
+        windows-*) (cd "$dist/$platform" && zip -q -X "$dist/tuq-$platform.zip" tuq.exe tuq-plan.exe) ;;
+        *) (cd "$dist/$platform" && COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata --uid 0 --gid 0 --uname root --gname root -czf "$dist/tuq-$platform.tar.gz" tuq tuq-plan) ;;
+        esac
+    done
+    (cd "$dist" && shasum -a 256 tuq-*.tar.gz tuq-*.zip >SHA256SUMS)
+}
+
+release() {
+    local dry_run="$1" version tag branch head upstream assets
+    need git "Xcode's command line tools"
+    need perl "Xcode's command line tools"
+    need cargo "https://rustup.rs"
+    need rustup "https://rustup.rs"
+    need lipo "Xcode's command line tools: xcode-select --install"
+    need codesign "Xcode's command line tools: xcode-select --install"
+    need zig "brew install zig"
+    need cargo-zigbuild "cargo install cargo-zigbuild --locked"
+    need zip "Xcode's command line tools"
+    [[ "$(uname -s)" == Darwin ]] || fail "a release is made on a Mac (it signs the macOS programs there)"
+    $dry_run || need gh "brew install gh, then gh auth login"
+
+    local installed line targets target
+    installed="$(rustup target list --installed)"
+    for line in "${platforms[@]}"; do
+        read -r _ targets _ <<<"$line"
+        for target in ${targets//,/ }; do
+            grep -qx "$target" <<<"$installed" || fail "the Rust target $target is missing: rustup target add $target"
+        done
+    done
+
+    step "Checking the checkout"
+    [[ -z "$(git -C "$root" status --porcelain)" ]] ||
+        fail "the checkout has local changes; commit or stash them first (the release commit carries only its own)"
+    branch="$(git -C "$root" branch --show-current)"
+    if $dry_run; then
+        [[ "$branch" == main ]] || echo "release: (dry run) on $branch, not main" >&2
+    else
+        [[ "$branch" == main ]] || fail "releases are made from main, not ${branch:-a detached HEAD}"
+        gh auth status >/dev/null 2>&1 || fail "gh isn't signed in: gh auth login"
+        git -C "$root" fetch --quiet origin main --tags
+        head="$(git -C "$root" rev-parse HEAD)"
+        upstream="$(git -C "$root" rev-parse origin/main)"
+        [[ "$head" == "$upstream" ]] ||
+            fail "main isn't level with origin/main (a dry run's commit? drop it: git reset --keep origin/main)"
+        # A tag of today's that origin doesn't have is a dry run's: it would push today's version to .2.
+        while IFS= read -r tag; do
+            git -C "$root" ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null ||
+                fail "the tag $tag is only here (a dry run's?); delete it first: git tag -d $tag"
+        done < <(git -C "$root" tag -l "v$(date +%Y.%m.%d)*")
+    fi
+
+    version="$(next_version)"
+    tag="v$version"
+    step "Releasing tuq $version"
+
+    step "Stamping every SKILL.md with metadata.tuq-release: $version"
+    stamp "$version"
+    step "Generating plugins/tuq-prefixed for Copilot and OpenCode"
+    regenerate
+    check
+
+    step "Testing the commands"
+    (cd "$root/commands" && env -u TUQ_RELEASE cargo test --quiet --locked >/dev/null)
+
+    rm -rf "$dist"
+    mkdir -p "$dist"
+    build "$version"
+    sign_and_verify "$version"
+    step "Packing the release assets"
+    pack
+
+    step "Committing and tagging $tag"
+    git -C "$root" add -A plugins/tuq plugins/tuq-prefixed
+    git -C "$root" commit --quiet -m "Release tuq $version" -m "Stamps every skill with metadata.tuq-release: $version and regenerates plugins/tuq-prefixed. The release $tag carries tuq and tuq-plan for macOS, Linux and Windows."
+    git -C "$root" tag -a "$tag" -m "tuq $version"
+
+    assets=("$dist"/tuq-*.tar.gz "$dist"/tuq-*.zip "$dist/SHA256SUMS")
+    echo
+    echo "Release assets in dist/:"
+    (cd "$dist" && ls -l tuq-*.tar.gz tuq-*.zip SHA256SUMS | awk '{ printf "  %-28s %8s bytes\n", $NF, $5 }')
+
+    if $dry_run; then
+        echo
+        echo "Dry run: committed and tagged $tag here; pushed nothing and created no release. It would now run:"
+        echo "  git push --atomic origin HEAD:refs/heads/main refs/tags/$tag"
+        echo "  gh release create $tag --verify-tag --title \"tuq $version\" --generate-notes ${assets[*]#"$root/"}"
+        echo "To drop the dry run's commit and tag: git tag -d $tag && git reset --keep HEAD~1"
+        return
+    fi
+
+    step "Pushing main and $tag"
+    git -C "$root" push --atomic origin HEAD:refs/heads/main "refs/tags/$tag"
+    step "Creating the GitHub release $tag"
+    (cd "$root" && gh release create "$tag" --verify-tag --title "tuq $version" --generate-notes "${assets[@]}")
+    echo "Released tuq $version."
+}
+
+case "${1:-}" in
+--check) check ;;
+--generate)
+    regenerate
+    echo "Regenerated plugins/tuq-prefixed from plugins/tuq."
+    ;;
+--dry-run) release true ;;
+"") release false ;;
+*)
+    echo "usage: scripts/release [--dry-run | --check | --generate]" >&2
+    exit 2
+    ;;
+esac

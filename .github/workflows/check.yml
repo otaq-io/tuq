@@ -1,0 +1,18 @@
+# Runs on every push and pull request: the commands' tests, and the check that the committed prefixed plugin for
+# Copilot and OpenCode (plugins/tuq-prefixed) is what plugins/tuq generates (scripts/release --check).
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The prefixed plugin is up to date
+        run: scripts/release --check
+      - name: The commands' tests
+        working-directory: commands
+        run: cargo test --locked

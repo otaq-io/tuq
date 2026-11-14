@@ -13,6 +13,13 @@ pub mod tuq;
 
 use std::io::Write;
 
+/// The tuq release these programs were built for: `scripts/release` sets `TUQ_RELEASE` (`2026.11.14`) when it builds
+/// them; a plain `cargo build` says `dev`. `tuq --version` and `tuq-plan --version` print it.
+pub const VERSION: &str = match option_env!("TUQ_RELEASE") {
+    Some(v) => v,
+    None => "dev",
+};
+
 /// Writes to stdout; a closed pipe (`tuq rules | head`) is not an error.
 pub fn out(bytes: &[u8]) {
     let mut s = std::io::stdout().lock();
